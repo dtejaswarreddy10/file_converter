@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Format Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .conversion-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        .file-input {
+            margin: 15px 0;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .description {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>File Format Converter</h1>
+    
+    <div class="container">
+        <div class="conversion-card">
+            <h2>COE to BIN Converter</h2>
+            <p class="description">Convert a .coe file with hexadecimal data (32-bit values) to a binary .bin file.</p>
+            
+            <div class="file-input">
+                <label for="coeFile">Select a .coe file:</label>
+                <input type="file" id="coeFile" accept=".coe">
+            </div>
+            
+            <button id="coeToBinBtn" disabled>Convert to BIN</button>
+            
+            <div id="coeToBinStatus" class="status"></div>
+        </div>
+        
+        <div class="conversion-card">
+            <h2>BIN to COE Converter</h2>
+            <p class="description">Convert a binary .bin file to a .coe file with hexadecimal data (32-bit values).</p>
+            
+            <div class="file-input">
+                <label for="binFile">Select a .bin file:</label>
+                <input type="file" id="binFile" accept=".bin">
+            </div>
+            
+            <button id="binToCoeBtn" disabled>Convert to COE</button>
+            
+            <div id="binToCoeStatus" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // COE to BIN conversion
+        document.getElementById('coeFile').addEventListener('change', function() {
+            document.getElementById('coeToBinBtn').disabled = !this.files.length;
+        });
+
+        document.getElementById('coeToBinBtn').addEventListener('click', function() {
+            const file = document.getElementById('coeFile').files[0];
+            const statusElement = document.getElementById('coeToBinStatus');
+            
+            if (!file) {
+                statusElement.textContent = 'Please select a file first.';
+                statusElement.className = 'status error';
+                return;
+            }
+            
+            statusElement.textContent = 'Processing...';
+            statusElement.className = 'status';
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    
+                    // Extract data from COE file
+                    const dataMatch = content.match(/memory_initialization_vector\s*=\s*([\s\S]*?);/);
+                    let dataStr;
+                    
+                    if (dataMatch) {
+                        dataStr = dataMatch[1];
+                    } else {
+                        // If no header is found, assume the whole file is data
+                        dataStr = content;
+                    }
+                    
+                    // Remove comments and extract hex values
+                    dataStr = dataStr.replace(/\/\/.*?\n/g, '\n');
+                    dataStr = dataStr.replace(/\/\*[\s\S]*?\*\//g, '');
+                    
+                    const hexValues = dataStr.match(/[0-9A-Fa-f]+/g) || [];
+                    
+                    if (!hexValues.length) {
+                        throw new Error('No valid hexadecimal values found in the file');
+                    }
+                    
+                    // Convert hex values to binary
+                    const buffer = new ArrayBuffer(hexValues.length * 4); // 4 bytes per 32-bit value
+                    const view = new DataView(buffer);
+                    
+                    hexValues.forEach((hex, index) => {
+                        const value = parseInt(hex, 16);
+                        view.setUint32(index * 4, value, false); // false = big-endian
+                    });
+                    
+                    // Create and download the BIN file
+                    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name.replace('.coe', '') + '.bin';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    statusElement.textContent = `Success! Converted ${hexValues.length} 32-bit values.`;
+                    statusElement.className = 'status';
+                } catch (error) {
+                    statusElement.textContent = 'Error: ' + error.message;
+                    statusElement.className = 'status error';
+                }
+            };
+            
+            reader.onerror = function() {
+                statusElement.textContent = 'Error reading the file.';
+                statusElement.className = 'status error';
+            };
+            
+            reader.readAsText(file);
+        });
+
+        // BIN to COE conversion
+        document.getElementById('binFile').addEventListener('change', function() {
+            document.getElementById('binToCoeBtn').disabled = !this.files.length;
+        });
+
+        document.getElementById('binToCoeBtn').addEventListener('click', function() {
+            const file = document.getElementById('binFile').files[0];
+            const statusElement = document.getElementById('binToCoeStatus');
+            
+            if (!file) {
+                statusElement.textContent = 'Please select a file first.';
+                statusElement.className = 'status error';
+                return;
+            }
+            
+            statusElement.textContent = 'Processing...';
+            statusElement.className = 'status';
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const buffer = e.target.result;
+                    const view = new DataView(buffer);
+                    const numWords = Math.floor(buffer.byteLength / 4); // 4 bytes per 32-bit word
+                    
+                    if (numWords === 0) {
+                        throw new Error('File is empty or too small for 32-bit values');
+                    }
+                    
+                    // Generate COE content
+                    let coeContent = 'memory_initialization_radix=16;\nmemory_initialization_vector=\n';
+                    
+                    for (let i = 0; i < numWords; i++) {
+                        const value = view.getUint32(i * 4, false); // false = big-endian
+                        const hex = value.toString(16).padStart(8, '0');
+                        
+                        coeContent += hex + (i < numWords - 1 ? ',\n' : ';\n');
+                    }
+                    
+                    // Create and download the COE file
+                    const blob = new Blob([coeContent], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name.replace('.bin', '') + '.coe';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    statusElement.textContent = `Success! Converted ${numWords} 32-bit values.`;
+                    statusElement.className = 'status';
+                } catch (error) {
+                    statusElement.textContent = 'Error: ' + error.message;
+                    statusElement.className = 'status error';
+                }
+            };
+            
+            reader.onerror = function() {
+                statusElement.textContent = 'Error reading the file.';
+                statusElement.className = 'status error';
+            };
+            
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
