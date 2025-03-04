@@ -3,250 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Format Converter</title>
+    <title>Data & File Converter</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            color: #333;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
         }
         .container {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            min-height: 100vh;
         }
-        .conversion-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
+        .section {
+            flex: 1;
             padding: 20px;
-            background-color: #f9f9f9;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-sizing: border-box;
         }
-        h2 {
-            color: #3498db;
+        .data-section {
+            background-color: #e0f7fa;
+            border-right: 1px solid #bdbdbd;
+        }
+        .file-section {
+            background-color: #e8f5e9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
             margin-top: 0;
         }
-        .file-input {
-            margin: 15px 0;
+        h2 {
+            color: #0277bd;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        input, select, button, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
         }
         button {
-            background-color: #3498db;
+            background-color: #4caf50;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-        }
-        .status {
-            margin-top: 15px;
-            color: #27ae60;
             font-weight: bold;
         }
-        .error {
-            color: #e74c3c;
+        button:hover {
+            background-color: #388e3c;
         }
-        .description {
-            margin-bottom: 15px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .file-formats {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .format {
+            width: 48%;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>File Format Converter</h1>
-    
     <div class="container">
-        <div class="conversion-card">
-            <h2>COE to BIN Converter</h2>
-            <p class="description">Convert a .coe file with hexadecimal data (32-bit values) to a binary .bin file.</p>
-            
-            <div class="file-input">
-                <label for="coeFile">Select a .coe file:</label>
-                <input type="file" id="coeFile" accept=".coe">
+        <!-- Data Converter Section -->
+        <div class="section data-section">
+            <h1>Data Converter</h1>
+            <div class="card">
+                <h2>Number System Converter</h2>
+                <div>
+                    <label for="data-input">Enter your data:</label>
+                    <input type="text" id="data-input" placeholder="Enter a number...">
+                    
+                    <label for="input-type">Input Type:</label>
+                    <select id="input-type">
+                        <option value="decimal">Decimal</option>
+                        <option value="binary">Binary</option>
+                        <option value="hex">Hexadecimal</option>
+                        <option value="octal">Octal</option>
+                    </select>
+
+                    <button onclick="convertData()">Convert</button>
+                </div>
+                <div id="data-results">
+                    <table id="results-table">
+                        <tr>
+                            <th>Format</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Decimal</td>
+                            <td id="decimal-result">-</td>
+                        </tr>
+                        <tr>
+                            <td>Binary</td>
+                            <td id="binary-result">-</td>
+                        </tr>
+                        <tr>
+                            <td>Hexadecimal</td>
+                            <td id="hex-result">-</td>
+                        </tr>
+                        <tr>
+                            <td>Octal</td>
+                            <td id="octal-result">-</td>
+                        </tr>
+                        <tr>
+                            <td>1's Complement</td>
+                            <td id="ones-result">-</td>
+                        </tr>
+                        <tr>
+                            <td>2's Complement</td>
+                            <td id="twos-result">-</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
-            
-            <button id="coeToBinBtn" disabled>Convert to BIN</button>
-            
-            <div id="coeToBinStatus" class="status"></div>
         </div>
-        
-        <div class="conversion-card">
-            <h2>BIN to COE Converter</h2>
-            <p class="description">Convert a binary .bin file to a .coe file with hexadecimal data (32-bit values).</p>
-            
-            <div class="file-input">
-                <label for="binFile">Select a .bin file:</label>
-                <input type="file" id="binFile" accept=".bin">
+
+        <!-- File Converter Section -->
+        <div class="section file-section">
+            <h1>File Converter</h1>
+            <div class="card">
+                <h2>Convert Files</h2>
+                <div>
+                    <label for="file-input">Upload your file:</label>
+                    <input type="file" id="file-input">
+                    
+                    <label for="output-format">Convert to:</label>
+                    <select id="output-format">
+                        <option value="">Select output format...</option>
+                        <optgroup label="Text Formats">
+                            <option value="txt">Text (.txt)</option>
+                            <option value="md">Markdown (.md)</option>
+                            <option value="html">HTML (.html)</option>
+                            <option value="xml">XML (.xml)</option>
+                            <option value="json">JSON (.json)</option>
+                            <option value="csv">CSV (.csv)</option>
+                        </optgroup>
+                        <optgroup label="Binary Formats">
+                            <option value="bin">Binary (.bin)</option>
+                            <option value="coe">Xilinx COE (.coe)</option>
+                            <option value="hex">Intel HEX (.hex)</option>
+                        </optgroup>
+                        <optgroup label="Code Formats">
+                            <option value="c">C Array (.c)</option>
+                            <option value="vhdl">VHDL (.vhd)</option>
+                            <option value="verilog">Verilog (.v)</option>
+                        </optgroup>
+                    </select>
+
+                    <div id="format-options" style="display:none;">
+                        <h3>Format Options</h3>
+                        <div id="binary-options" class="format-specific-options">
+                            <label for="word-size">Word Size (bits):</label>
+                            <select id="word-size">
+                                <option value="8">8-bit</option>
+                                <option value="16">16-bit</option>
+                                <option value="32">32-bit</option>
+                            </select>
+                            
+                            <label for="endianness">Endianness:</label>
+                            <select id="endianness">
+                                <option value="little">Little Endian</option>
+                                <option value="big">Big Endian</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="convertFile()">Convert File</button>
+                </div>
+                <div>
+                    <h3>Output Preview</h3>
+                    <textarea id="file-output" rows="10" readonly placeholder="Output will appear here..."></textarea>
+                    <button id="download-btn" disabled>Download Converted File</button>
+                </div>
             </div>
-            
-            <button id="binToCoeBtn" disabled>Convert to COE</button>
-            
-            <div id="binToCoeStatus" class="status"></div>
         </div>
     </div>
 
     <script>
-        // COE to BIN conversion
-        document.getElementById('coeFile').addEventListener('change', function() {
-            document.getElementById('coeToBinBtn').disabled = !this.files.length;
-        });
-
-        document.getElementById('coeToBinBtn').addEventListener('click', function() {
-            const file = document.getElementById('coeFile').files[0];
-            const statusElement = document.getElementById('coeToBinStatus');
+        // Data converter functions
+        function convertData() {
+            const dataInput = document.getElementById('data-input').value.trim();
+            const inputType = document.getElementById('input-type').value;
             
-            if (!file) {
-                statusElement.textContent = 'Please select a file first.';
-                statusElement.className = 'status error';
+            if (!dataInput) {
+                alert('Please enter data to convert');
                 return;
             }
             
-            statusElement.textContent = 'Processing...';
-            statusElement.className = 'status';
+            let decimalValue;
             
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    
-                    // Extract data from COE file
-                    const dataMatch = content.match(/memory_initialization_vector\s*=\s*([\s\S]*?);/);
-                    let dataStr;
-                    
-                    if (dataMatch) {
-                        dataStr = dataMatch[1];
-                    } else {
-                        // If no header is found, assume the whole file is data
-                        dataStr = content;
-                    }
-                    
-                    // Remove comments and extract hex values
-                    dataStr = dataStr.replace(/\/\/.*?\n/g, '\n');
-                    dataStr = dataStr.replace(/\/\*[\s\S]*?\*\//g, '');
-                    
-                    const hexValues = dataStr.match(/[0-9A-Fa-f]+/g) || [];
-                    
-                    if (!hexValues.length) {
-                        throw new Error('No valid hexadecimal values found in the file');
-                    }
-                    
-                    // Convert hex values to binary
-                    const buffer = new ArrayBuffer(hexValues.length * 4); // 4 bytes per 32-bit value
-                    const view = new DataView(buffer);
-                    
-                    hexValues.forEach((hex, index) => {
-                        const value = parseInt(hex, 16);
-                        view.setUint32(index * 4, value, false); // false = big-endian
-                    });
-                    
-                    // Create and download the BIN file
-                    const blob = new Blob([buffer], { type: 'application/octet-stream' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = file.name.replace('.coe', '') + '.bin';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    statusElement.textContent = `Success! Converted ${hexValues.length} 32-bit values.`;
-                    statusElement.className = 'status';
-                } catch (error) {
-                    statusElement.textContent = 'Error: ' + error.message;
-                    statusElement.className = 'status error';
+            try {
+                // Convert input to decimal first
+                switch(inputType) {
+                    case 'decimal':
+                        decimalValue = parseInt(dataInput, 10);
+                        break;
+                    case 'binary':
+                        decimalValue = parseInt(dataInput, 2);
+                        break;
+                    case 'hex':
+                        decimalValue = parseInt(dataInput, 16);
+                        break;
+                    case 'octal':
+                        decimalValue = parseInt(dataInput, 8);
+                        break;
                 }
-            };
+                
+                if (isNaN(decimalValue)) {
+                    throw new Error('Invalid input for the selected number system');
+                }
+                
+                // Calculate and display all representations
+                document.getElementById('decimal-result').textContent = decimalValue;
+                document.getElementById('binary-result').textContent = decimalValue.toString(2);
+                document.getElementById('hex-result').textContent = decimalValue.toString(16).toUpperCase();
+                document.getElementById('octal-result').textContent = decimalValue.toString(8);
+                
+                // Calculate 1's complement (for 8 bits)
+                const binaryStr = decimalValue.toString(2).padStart(8, '0');
+                const onesComplement = binaryStr.split('').map(bit => bit === '0' ? '1' : '0').join('');
+                document.getElementById('ones-result').textContent = onesComplement;
+                
+                // Calculate 2's complement (1's complement + 1)
+                let twosComplement = '';
+                let carry = 1;
+                
+                for (let i = onesComplement.length - 1; i >= 0; i--) {
+                    const sum = parseInt(onesComplement[i]) + carry;
+                    twosComplement = (sum % 2) + twosComplement;
+                    carry = Math.floor(sum / 2);
+                }
+                
+                document.getElementById('twos-result').textContent = twosComplement;
+                
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+        
+        // File converter functions
+        function convertFile() {
+            const fileInput = document.getElementById('file-input');
+            const outputFormat = document.getElementById('output-format').value;
             
-            reader.onerror = function() {
-                statusElement.textContent = 'Error reading the file.';
-                statusElement.className = 'status error';
-            };
-            
-            reader.readAsText(file);
-        });
-
-        // BIN to COE conversion
-        document.getElementById('binFile').addEventListener('change', function() {
-            document.getElementById('binToCoeBtn').disabled = !this.files.length;
-        });
-
-        document.getElementById('binToCoeBtn').addEventListener('click', function() {
-            const file = document.getElementById('binFile').files[0];
-            const statusElement = document.getElementById('binToCoeStatus');
-            
-            if (!file) {
-                statusElement.textContent = 'Please select a file first.';
-                statusElement.className = 'status error';
+            if (!fileInput.files.length) {
+                alert('Please select a file to convert');
                 return;
             }
             
-            statusElement.textContent = 'Processing...';
-            statusElement.className = 'status';
+            if (!outputFormat) {
+                alert('Please select an output format');
+                return;
+            }
             
+            const file = fileInput.files[0];
             const reader = new FileReader();
             
             reader.onload = function(e) {
-                try {
-                    const buffer = e.target.result;
-                    const view = new DataView(buffer);
-                    const numWords = Math.floor(buffer.byteLength / 4); // 4 bytes per 32-bit word
-                    
-                    if (numWords === 0) {
-                        throw new Error('File is empty or too small for 32-bit values');
-                    }
-                    
-                    // Generate COE content
-                    let coeContent = 'memory_initialization_radix=16;\nmemory_initialization_vector=\n';
-                    
-                    for (let i = 0; i < numWords; i++) {
-                        const value = view.getUint32(i * 4, false); // false = big-endian
-                        const hex = value.toString(16).padStart(8, '0');
-                        
-                        coeContent += hex + (i < numWords - 1 ? ',\n' : ';\n');
-                    }
-                    
-                    // Create and download the COE file
-                    const blob = new Blob([coeContent], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = file.name.replace('.bin', '') + '.coe';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    statusElement.textContent = `Success! Converted ${numWords} 32-bit values.`;
-                    statusElement.className = 'status';
-                } catch (error) {
-                    statusElement.textContent = 'Error: ' + error.message;
-                    statusElement.className = 'status error';
+                const fileContent = e.target.result;
+                
+                // Handle different conversion scenarios
+                let result = '';
+                
+                if (outputFormat === 'coe') {
+                    // Convert to Xilinx COE format
+                    result = convertToCoe(fileContent);
+                } else if (outputFormat === 'bin') {
+                    // Placeholder for binary conversion
+                    result = 'Binary conversion would appear here';
+                } else {
+                    // Generic conversion message
+                    result = `Converted to ${outputFormat.toUpperCase()} format would appear here.\n\nActual file conversion requires server-side processing.`;
                 }
+                
+                document.getElementById('file-output').value = result;
+                document.getElementById('download-btn').disabled = false;
             };
             
-            reader.onerror = function() {
-                statusElement.textContent = 'Error reading the file.';
-                statusElement.className = 'status error';
-            };
+            // Read file as appropriate type based on conversion needed
+            if (outputFormat === 'coe' || outputFormat === 'bin' || outputFormat === 'hex') {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsText(file);
+            }
+        }
+        
+        // Convert to Xilinx COE format
+        function convertToCoe(fileContent) {
+            // Get array buffer from file content
+            const buffer = new Uint8Array(fileContent);
             
-            reader.readAsArrayBuffer(file);
+            // Create COE header
+            let coeContent = 'memory_initialization_radix=16;\n';
+            coeContent += 'memory_initialization_vector=\n';
+            
+            // Convert each byte to hex and add to COE content
+            for (let i = 0; i < buffer.length; i++) {
+                coeContent += buffer[i].toString(16).padStart(2, '0');
+                
+                if (i === buffer.length - 1) {
+                    coeContent += ';';
+                } else {
+                    coeContent += ',\n';
+                }
+            }
+            
+            return coeContent;
+        }
+        
+        // Show/hide format specific options
+        document.getElementById('output-format').addEventListener('change', function() {
+            const formatOptions = document.getElementById('format-options');
+            const selectedFormat = this.value;
+            
+            if (selectedFormat === 'bin' || selectedFormat === 'coe' || selectedFormat === 'hex') {
+                formatOptions.style.display = 'block';
+            } else {
+                formatOptions.style.display = 'none';
+            }
+        });
+        
+        // Handle download button
+        document.getElementById('download-btn').addEventListener('click', function() {
+            const outputFormat = document.getElementById('output-format').value;
+            const outputContent = document.getElementById('file-output').value;
+            
+            if (!outputContent) return;
+            
+            const blob = new Blob([outputContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = `converted.${outputFormat}`;
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(function() {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
         });
     </script>
 </body>
